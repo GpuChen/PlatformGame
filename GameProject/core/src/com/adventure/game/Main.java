@@ -1,44 +1,74 @@
 package com.adventure.game;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.adventure.menu.MenuScreen;
 import com.adventure.menu.SplashScreen;
 import com.adventure.menu.TitleScreen;
-import com.adventure.stage.PlayStage;
+import com.adventure.stage.PlayableStage;
 
 public class Main extends Game {
 	
 	public SpriteBatch batch;
-
+	
+	public boolean paused;
+	public boolean debug;
+	
 	TitleScreen titleScreen;
-	PlayStage playStage;
+	PlayableStage playStage;
 	
 	
 	@Override
 	public void create () {
-
+		
+		// Global Part
+		
+		paused = false;
+		debug = true;
+		
+		// Global Part
+				
+		
 		batch = new SpriteBatch();
 		//img = new Texture("badlogic.jpg");
 		
-		titleScreen = new TitleScreen(this);
+		//titleScreen = new TitleScreen(this);
 		//setScreen(titleScreen);
 		
-		//playStage = new PlayStage(this);
-		//setScreen(playStage);
-	}
+		//setScreen(new MenuScreen(this));
+		
+		playStage = new PlayableStage(this);
+		setScreen(playStage);
 
+	}
+	@Override
+	public void pause() {
+		//super.pause();
+		paused = (paused) ? false : true;
+		
+	}
 	
 	@Override
 	public void render() {
+		if(debug) {
+			Gdx.graphics.setTitle(GlobalVariable.GAME_TITLE + " FPS:" + Gdx.graphics.getFramesPerSecond());
+		}
 		super.render();
 	}
+	
 	
 	public void dispose() {
 		super.dispose();
 		batch.dispose();
 	}
+	
 }
 
 
