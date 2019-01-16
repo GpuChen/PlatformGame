@@ -12,14 +12,18 @@ public class GlobalVariable {
 	public static final float PPM = 100;
 
 	public static String GAME_TITLE = "New Game";
-	public static int SCALE = 1;
+	public static int SCALE = 2;
 	public static int WIDTH = 320;
 	public static int HEIGHT = 200;
 
 	public static final short NOTHING_BIT = 0;
 	public static final short GROUND_BIT = 1;
 	public static final short PLAYER_BIT = 2;
-	public static final short OBJECT_BIT= 4;
+	public static final short OBJECT_BIT = 4;
+	
+	// 3 : 0000 0011
+	
+	// 6 : 0000 0110
 	
 	// TODO: setting default, if none of setting before then using default
 

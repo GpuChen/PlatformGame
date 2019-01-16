@@ -2,21 +2,14 @@ package com.adventure.stage;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import static com.adventure.game.GlobalVariable.PPM;
@@ -43,8 +36,6 @@ public class PlayableStage implements Screen {
 	// ********** GameObject **********
 	public Player player;
 
-	public BodyDef bdef;
-	public Body b2body;
 	// public Array<Sprite> Objects; // Manager all object render and update method
 
 	// ********** TileMap **********
@@ -63,7 +54,7 @@ public class PlayableStage implements Screen {
 		camera = new OrthographicCamera();
 		cameraViewPort = new FitViewport(WIDTH / PPM, HEIGHT / PPM, camera);
 
-		world = new World(new Vector2(0, -9.8f), true);
+		world = new World(new Vector2(0, -9.81f), true);
 		world.setContactListener(new WorldContactListener());
 		b2dr = new Box2DDebugRenderer();
 
@@ -77,19 +68,15 @@ public class PlayableStage implements Screen {
 
 
 		// GameObject Initialized
-//		bdef = new BodyDef();
-//		bdef.position.set(16 / PPM, 32 / PPM);
-//		bdef.type = BodyType.StaticBody;
-//		b2body = world.createBody(bdef);
-		WorldRender worldRender = new WorldRender(this);
+		new WorldRender(this);
 		player = new Player(this);
 
+		
 	}
 
 	public void update(float dt) {
-		world.step(1 / 60f, 4, 2);
-		inputController(dt);
 		player.update(dt);
+		world.step(1 / 60f, 4, 2);
 		//camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f) / 100f;
 
 		float camPosition_x = (player.b2Body.getPosition().x - camera.position.x) * 0.1f;
@@ -137,7 +124,7 @@ public class PlayableStage implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-
+		cameraViewPort.update(width, height);
 	}
 
 	@Override
@@ -174,25 +161,4 @@ public class PlayableStage implements Screen {
 		return tileMap;
 	}
 
-	public void inputController(float dt) {
-
-		if (Gdx.input.isKeyJustPressed(Keys.UP)) {
-			player.b2Body.applyLinearImpulse(new Vector2(0, 3.5f), player.b2Body.getWorldCenter(), true);
-		}
-
-		if (Gdx.input.isKeyPressed(Keys.RIGHT) && player.b2Body.getLinearVelocity().x >= -1f) {
-			//player.b2Body.applyLinearImpulse(new Vector2(1f, 0), player.b2Body.getWorldCenter(), true);
-			player.b2Body.setLinearVelocity(1.25f, player.b2Body.getLinearVelocity().y);
-		} else if (Gdx.input.isKeyPressed(Keys.LEFT) && player.b2Body.getLinearVelocity().x >= -1f) {
-			//player.b2Body.applyLinearImpulse(new Vector2(-1f, 0), player.b2Body.getWorldCenter(), true);
-			player.b2Body.setLinearVelocity(-1.25f, player.b2Body.getLinearVelocity().y);
-		} else if (!Gdx.input.isKeyPressed(Keys.RIGHT) && !Gdx.input.isKeyPressed(Keys.LEFT) ){
-			player.b2Body.setLinearVelocity(0, player.b2Body.getLinearVelocity().y);
-		}
-		
-		
-		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
-			Gdx.app.exit();
-		}
-	}
 }

@@ -36,32 +36,35 @@ public class WorldRender {
 		bdef = new BodyDef();
 		shape = new PolygonShape();
 		fdef = new FixtureDef();
-		
-		
+
 		for (MapObject obj : getLayerByGroup("ObjectLayer", "Wall").getObjects().getByType(RectangleMapObject.class)) {
 			Rectangle rect = ((RectangleMapObject) obj).getRectangle();
 			bdef.type = BodyDef.BodyType.StaticBody;
 			bdef.position.set((rect.getX() + rect.getWidth() / 2) / PPM, (rect.getY() + rect.getHeight() / 2) / PPM);
 			body = world.createBody(bdef);
-			
 			shape.setAsBox((rect.getWidth() / 2) / PPM, (rect.getHeight() / 2) / PPM);
 			fdef.shape = shape;
-			body.createFixture(fdef);
-			
+			fdef.filter.categoryBits = GlobalVariable.OBJECT_BIT;
+			fdef.friction = 0;
+			body.createFixture(fdef).setUserData("wall");
+
 		}
-		
-		for (MapObject obj : getLayerByGroup("ObjectLayer", "Platform").getObjects().getByType(RectangleMapObject.class)) {
+
+		for (MapObject obj : getLayerByGroup("ObjectLayer", "Platform").getObjects()
+				.getByType(RectangleMapObject.class)) {
 			Rectangle rect = ((RectangleMapObject) obj).getRectangle();
 			bdef.type = BodyDef.BodyType.StaticBody;
 			bdef.position.set((rect.getX() + rect.getWidth() / 2) / PPM, (rect.getY() + rect.getHeight() / 2) / PPM);
 			body = world.createBody(bdef);
-			
+
 			shape.setAsBox((rect.getWidth() / 2) / PPM, (rect.getHeight() / 2) / PPM);
 			fdef.shape = shape;
-			body.createFixture(fdef);
-			
+			fdef.filter.categoryBits = GlobalVariable.GROUND_BIT;
+			fdef.friction = 0;
+			body.createFixture(fdef).setUserData("platform");
+
 		}
-		
+
 	}
 
 	private MapLayer getLayerByGroup(String group, String layer) {
@@ -81,13 +84,13 @@ public class WorldRender {
 			bdef.type = BodyDef.BodyType.StaticBody;
 			bdef.position.set((rect.getX() + rect.getWidth() / 2) / PPM, (rect.getY() + rect.getHeight() / 2) / PPM);
 			body = world.createBody(bdef);
-			
+
 			shape.setAsBox((rect.getWidth() / 2) / PPM, (rect.getHeight() / 2) / PPM);
 			fdef.shape = shape;
-			if(filter != -1)
+			if (filter != -1)
 				fdef.filter.categoryBits = filter;
 			body.createFixture(fdef);
-			
+
 		}
 //		Original:
 //		for (MapObject obj : getLayerByGroup("ObjectLayer", "Wall").getObjects().getByType(RectangleMapObject.class)) {
