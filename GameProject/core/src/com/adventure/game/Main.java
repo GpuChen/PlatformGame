@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
@@ -13,6 +14,7 @@ import com.adventure.menu.MenuScreen;
 import com.adventure.menu.SplashScreen;
 import com.adventure.menu.TitleScreen;
 import com.adventure.stage.PlayableStage;
+import com.adventure.stage.testScreen;
 
 public class Main extends Game {
 	
@@ -23,7 +25,6 @@ public class Main extends Game {
 	
 	TitleScreen titleScreen;
 	PlayableStage playStage;
-	
 	
 	@Override
 	public void create () {
@@ -44,9 +45,11 @@ public class Main extends Game {
 		
 		//setScreen(new MenuScreen(this));
 		
-		playStage = new PlayableStage(this);
+		playStage = new PlayableStage(this, "testWorld/map01.tmx", new Vector2(200, 200), true);
 		setScreen(playStage);
 
+		//setScreen(new testScreen(this));
+		
 	}
 	@Override
 	public void pause() {
@@ -57,6 +60,7 @@ public class Main extends Game {
 	
 	@Override
 	public void render() {
+
 		if(debug) {
 			Gdx.graphics.setTitle(GlobalVariable.GAME_TITLE + " FPS:" + Gdx.graphics.getFramesPerSecond());
 		}
@@ -68,6 +72,7 @@ public class Main extends Game {
 		super.dispose();
 		batch.dispose();
 	}
+	
 	
 }
 

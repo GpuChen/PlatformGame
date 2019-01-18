@@ -1,6 +1,7 @@
 package com.adventure.stage;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -14,9 +15,6 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import static com.adventure.game.GlobalVariable.PPM;
 import static com.adventure.game.GlobalVariable.WIDTH;
-
-import java.util.Vector;
-
 import static com.adventure.game.GlobalVariable.HEIGHT;
 import com.adventure.game.*;
 import com.adventure.object.Player;
@@ -32,10 +30,10 @@ public class PlayableStage implements Screen {
 	public Viewport cameraViewPort;
 
 	// ********** Texture **********
-	
+
 	// ********** GameObject **********
 	public Player player;
-
+	public HUD hud;
 	// public Array<Sprite> Objects; // Manager all object render and update method
 
 	// ********** TileMap **********
@@ -44,9 +42,15 @@ public class PlayableStage implements Screen {
 	private TiledMap tileMap;
 	private OrthogonalTiledMapRenderer mapRenderer;
 
+	// ********** Map Variable **********
+	public boolean portalabled;
+	public String mapTo;
+	public Vector2 teleportTo;
+	public boolean playerFacingRight;
+	public String mapName;
 	// ********** Function **********
 
-	public PlayableStage(Main game) {
+	public PlayableStage(Main game, String map, Vector2 playerPosition, boolean playerFacingRight) {
 
 		// Main Object initialized
 		this.game = game;
@@ -60,38 +64,45 @@ public class PlayableStage implements Screen {
 
 		// Map Loader and image Loading
 		// mapLoader = new TmxMapLoader();
-		tileMap = new TmxMapLoader().load("map/testWorld/map01.tmx");
+		tileMap = new TmxMapLoader().load("map/" + map);
 		mapRenderer = new OrthogonalTiledMapRenderer(tileMap, 1 / PPM);
 		camera.setToOrtho(false, cameraViewPort.getWorldWidth(), cameraViewPort.getWorldHeight());
 		// camera.position.set(cameraViewPort.getWorldWidth() / 2,
 		// cameraViewPort.getWorldHeight() / 2, 0);
 
-
 		// GameObject Initialized
-		new WorldRender(this);
-		player = new Player(this);
+		new WorldRender(this, map);
 
+		try {
+			player = new Player(this, playerPosition, playerFacingRight);
+		} catch (Error err) {
+
+		}
+		portalabled = false;
+		mapTo = "";
+		teleportTo = null;
 		
+		mapName = map.substring(map.lastIndexOf("/") + 1, map.lastIndexOf("."));
+		
+		
+		hud = new HUD(game.batch, this);
+		camera.position.set(playerPosition.x / PPM, playerPosition.y / PPM, 0);
 	}
 
 	public void update(float dt) {
+		// System.out.println(portalabled + ", " + teleportTo + ", " + mapTo);
+
 		player.update(dt);
 		world.step(1 / 60f, 4, 2);
-		//camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f) / 100f;
+		// camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f)
+		// / 100f;
 
 		float camPosition_x = (player.b2Body.getPosition().x - camera.position.x) * 0.1f;
-		float camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.1f;
+		float camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f);
 		camera.position.x += (float) Math.round(camPosition_x * 99f) / 99f;
 		camera.position.y += ((float) Math.round(camPosition_y * 99f) / 99f);
 
-//		if (Gdx.input.isKeyPressed(Keys.LEFT))
-//			camera.position.x -= (float) Math.round(1.5 * dt * 100f) / 100f;
-//		if (Gdx.input.isKeyPressed(Keys.RIGHT))
-//			camera.position.x += (float) Math.round(1.5 * dt * 100f) / 100f;
-//		if (Gdx.input.isKeyPressed(Keys.UP))
-//			camera.position.y += (float) Math.round(1.5 * dt * 100f) / 100f;
-//		if (Gdx.input.isKeyPressed(Keys.DOWN))
-//			camera.position.y -= (float) Math.round(1.5 * dt * 100f) / 100f;
+		hud.update(dt);
 
 		camera.update();
 		mapRenderer.setView(camera);
@@ -114,7 +125,16 @@ public class PlayableStage implements Screen {
 		game.batch.begin();
 		player.draw(game.batch);
 		game.batch.end();
-		
+
+		game.batch.setProjectionMatrix(hud.actorStage.getCamera().combined);
+		hud.actorStage.draw();
+
+		if (portalabled) {
+			if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+				game.setScreen(new PlayableStage(game, mapTo, teleportTo, playerFacingRight));
+				dispose();
+			}
+		}
 	}
 
 	@Override
@@ -139,18 +159,15 @@ public class PlayableStage implements Screen {
 
 	@Override
 	public void hide() {
-		dispose();
 	}
 
 	@Override
 	public void dispose() {
-
-		world.dispose();
-		b2dr.dispose();
-
+		hud.dispose();
 		tileMap.dispose();
+		world.dispose();
 		mapRenderer.dispose();
-		
+		b2dr.dispose();
 	}
 
 	public World getWorld() {

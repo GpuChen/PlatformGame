@@ -23,6 +23,8 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 
 import static com.adventure.game.GlobalVariable.PPM;
 
+import javax.swing.text.Position;
+
 public class Player extends Sprite {
 
 	public enum State {
@@ -51,10 +53,10 @@ public class Player extends Sprite {
 	private Animation<TextureRegion> runing;
 	private Animation<TextureRegion> runStop;
 
-	public boolean wallHit;
 	public float movementSpeed;
+	public float animationSpeed;
 
-	public Player(PlayableStage stage) {
+	public Player(PlayableStage stage, Vector2 position, boolean facingRight) {
 
 		// Animation Setting and Default
 		// super(stage.playerAtlas.findRegion("idel"));
@@ -63,10 +65,9 @@ public class Player extends Sprite {
 		currState = State.IDEL;
 		prevState = State.IDEL;
 		stateTimer = 0;
-		runningRight = true;
-		wallHit = false;
-
-		movementSpeed = 1.25f;
+		runningRight = facingRight;
+		animationSpeed = 1f;
+		movementSpeed = 1.4f;
 
 		// setting Animation and texture.
 		Array<TextureRegion> frames = new Array<TextureRegion>();
@@ -80,17 +81,19 @@ public class Player extends Sprite {
 		idel = new TextureRegion(playerAtlas.findRegion("idel").getTexture(), 132, 16, 30, 50);
 
 		// ---------------------------------
-		//setBounds(0, 0, width / PPM, height / PPM);
+		// setBounds(0, 0, width / PPM, height / PPM);
 		setRegion(idel);
 
 		world = stage.getWorld();
-		DefindPlayer(world);
+		DefindPlayer(world, position);
 	}
 
 	public void update(float dt) {
-		setPosition((b2Body.getPosition().x - getWidth() / 2),
-				(b2Body.getPosition().y - getHeight() / 2));
-		setRegion(getFrame(dt));
+		movementSpeed = 1.0f;
+		animationSpeed = 0.7f;
+		
+		setPosition((b2Body.getPosition().x - getWidth() / 2), (b2Body.getPosition().y - getHeight() / 2));
+		setRegion(getFrame(dt * animationSpeed));
 		playerMovement(dt);
 		// System.out.println(b2Body.getLinearVelocity().x);
 	}
@@ -98,7 +101,7 @@ public class Player extends Sprite {
 	public void playerMovement(float dt) {
 
 		if (Gdx.input.isKeyJustPressed(Keys.UP)) {
-			b2Body.applyLinearImpulse(new Vector2(0, 3.5f), b2Body.getWorldCenter(), true);
+			b2Body.applyLinearImpulse(new Vector2(0, 4f), b2Body.getWorldCenter(), true);
 		}
 
 		if (Gdx.input.isKeyPressed(Keys.RIGHT)) {
@@ -125,12 +128,14 @@ public class Player extends Sprite {
 		switch (currState) {
 		case RUNNING:
 			region = runing.getKeyFrame(stateTimer, true);
-			setBounds(b2Body.getPosition().x - (50 / PPM / 2), b2Body.getPosition().y - (50 / PPM / 2), 50 / PPM, 50 / PPM);
+			setBounds(b2Body.getWorldCenter().x - (50 / PPM / 2), b2Body.getWorldCenter().y - (50 / PPM / 2), 50 / PPM,
+					50 / PPM);
 			break;
 
 		default:
 			region = idel;
-			setBounds(b2Body.getWorldCenter().x - (30 / PPM / 2), b2Body.getWorldCenter().y - (50 / PPM / 2), 30 / PPM, 50 / PPM);
+			setBounds(b2Body.getWorldCenter().x - (30 / PPM / 2), b2Body.getWorldCenter().y - (50 / PPM / 2), 30 / PPM,
+					50 / PPM);
 			break;
 		}
 
@@ -146,11 +151,11 @@ public class Player extends Sprite {
 		prevState = currState;
 		return region;
 	}
-	
-	public void DefindPlayer(World world) {
+
+	public void DefindPlayer(World world, Vector2 position) {
 		// hit box part
 		BodyDef bdef = new BodyDef();
-		bdef.position.set(new Vector2(200 / PPM, 200 / PPM));
+		bdef.position.set(new Vector2(position.x / PPM, position.y / PPM));
 		bdef.type = BodyType.DynamicBody;
 		// bdef.type = BodyType.StaticBody;
 		b2Body = world.createBody(bdef);
@@ -168,12 +173,24 @@ public class Player extends Sprite {
 		shape.setAsBox(feetBox_width / PPM, feetBox_height / PPM, new Vector2(0, -24 / PPM), 0);
 		fdef.shape = shape;
 		fdef.filter.categoryBits = GlobalVariable.PLAYER_BIT;
-		fdef.filter.maskBits = GlobalVariable.GROUND_BIT | GlobalVariable.OBJECT_BIT;
+		fdef.filter.maskBits = GlobalVariable.GROUND_BIT | GlobalVariable.OBJECT_BIT | GlobalVariable.PORTAL_BIT;
 		fdef.isSensor = true;
 		b2Body.createFixture(fdef).setUserData("playerFoot");
 
 	}
-	
+
+	public Vector2 getVelocity() {
+		return new Vector2(b2Body.getLinearVelocity().x, b2Body.getLinearVelocity().y);
+	}
+
+	public Vector2 getPosition() {
+		return new Vector2(b2Body.getPosition().x, b2Body.getPosition().y);
+	}
+
+	public void facingRight() {
+		runningRight = (runningRight) ? false : true;
+	}
+
 	public State getState() {
 
 		if (b2Body.getLinearVelocity().x != 0)
@@ -182,5 +199,4 @@ public class Player extends Sprite {
 			return State.IDEL;
 	}
 
-	
 }

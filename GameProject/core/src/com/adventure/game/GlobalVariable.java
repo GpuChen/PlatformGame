@@ -20,7 +20,7 @@ public class GlobalVariable {
 	public static final short GROUND_BIT = 1;
 	public static final short PLAYER_BIT = 2;
 	public static final short OBJECT_BIT = 4;
-	
+	public static final short PORTAL_BIT = 8;
 	// 3 : 0000 0011
 	
 	// 6 : 0000 0110

@@ -1,6 +1,7 @@
 package com.adventure.game;
 
 import com.adventure.object.Player;
+import com.adventure.object.Portal;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -21,10 +22,13 @@ public class WorldContactListener implements ContactListener {
 //		System.out.println("b:"+ fixB.getUserData());
 //		System.out.println(cDef);
 
-		// Player movement stop by wall and other object, and setting to not to stick
-		// in.
 		switch (cDef) {
-		case GlobalVariable.PLAYER_BIT | GlobalVariable.OBJECT_BIT:
+		case GlobalVariable.PLAYER_BIT | GlobalVariable.PORTAL_BIT:
+			if (fixA.getFilterData().categoryBits == GlobalVariable.PORTAL_BIT) {
+				((Portal) fixA.getUserData()).TpEnabled();
+			} else if (fixB.getFilterData().categoryBits == GlobalVariable.PORTAL_BIT) {
+				((Portal) fixB.getUserData()).TpEnabled();
+			}
 			break;
 		}
 
@@ -32,7 +36,19 @@ public class WorldContactListener implements ContactListener {
 
 	@Override
 	public void endContact(Contact contact) {
-
+		Fixture fixA = contact.getFixtureA();
+		Fixture fixB = contact.getFixtureB();
+		int cDef = fixA.getFilterData().categoryBits | fixB.getFilterData().categoryBits;
+		
+		switch (cDef) {
+		case GlobalVariable.PLAYER_BIT | GlobalVariable.PORTAL_BIT:
+			if (fixA.getFilterData().categoryBits == GlobalVariable.PORTAL_BIT) {
+				((Portal) fixA.getUserData()).TpDisabled();
+			} else if (fixB.getFilterData().categoryBits == GlobalVariable.PORTAL_BIT) {
+				((Portal) fixB.getUserData()).TpDisabled();
+			}
+			break;
+		}
 	}
 
 	@Override
