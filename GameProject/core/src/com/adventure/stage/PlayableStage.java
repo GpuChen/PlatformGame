@@ -3,14 +3,21 @@ package com.adventure.stage;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import static com.adventure.game.GlobalVariable.PPM;
@@ -28,8 +35,10 @@ public class PlayableStage implements Screen {
 
 	public OrthographicCamera camera;
 	public Viewport cameraViewPort;
-
+	public boolean mapSwitching;
 	// ********** Texture **********
+	public Stage stage;
+	private Image image;
 
 	// ********** GameObject **********
 	public Player player;
@@ -40,7 +49,7 @@ public class PlayableStage implements Screen {
 
 	// private TmxMapLoader mapLoader;
 	private TiledMap tileMap;
-	private OrthogonalTiledMapRenderer mapRenderer;
+	private GulaOrthogonalTiledMapRenderer mapRenderer;
 
 	// ********** Map Variable **********
 	public boolean portalabled;
@@ -48,16 +57,15 @@ public class PlayableStage implements Screen {
 	public Vector2 teleportTo;
 	public boolean playerFacingRight;
 	public String mapName;
+
 	// ********** Function **********
 
 	public PlayableStage(Main game, String map, Vector2 playerPosition, boolean playerFacingRight) {
-
 		// Main Object initialized
 		this.game = game;
 
 		camera = new OrthographicCamera();
 		cameraViewPort = new FitViewport(WIDTH / PPM, HEIGHT / PPM, camera);
-
 		world = new World(new Vector2(0, -9.81f), true);
 		world.setContactListener(new WorldContactListener());
 		b2dr = new Box2DDebugRenderer();
@@ -65,12 +73,15 @@ public class PlayableStage implements Screen {
 		// Map Loader and image Loading
 		// mapLoader = new TmxMapLoader();
 		tileMap = new TmxMapLoader().load("map/" + map);
-		mapRenderer = new OrthogonalTiledMapRenderer(tileMap, 1 / PPM);
+		mapRenderer = new GulaOrthogonalTiledMapRenderer(tileMap, 1 / PPM);
+
 		camera.setToOrtho(false, cameraViewPort.getWorldWidth(), cameraViewPort.getWorldHeight());
+
 		// camera.position.set(cameraViewPort.getWorldWidth() / 2,
 		// cameraViewPort.getWorldHeight() / 2, 0);
 
 		// GameObject Initialized
+		mapSwitching = false;
 		new WorldRender(this, map);
 
 		try {
@@ -81,10 +92,9 @@ public class PlayableStage implements Screen {
 		portalabled = false;
 		mapTo = "";
 		teleportTo = null;
-		
+
 		mapName = map.substring(map.lastIndexOf("/") + 1, map.lastIndexOf("."));
-		
-		
+
 		hud = new HUD(game.batch, this);
 		camera.position.set(playerPosition.x / PPM, playerPosition.y / PPM, 0);
 	}
@@ -92,28 +102,47 @@ public class PlayableStage implements Screen {
 	public void update(float dt) {
 		// System.out.println(portalabled + ", " + teleportTo + ", " + mapTo);
 
-		player.update(dt);
 		world.step(1 / 60f, 4, 2);
-		// camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f)
-		// / 100f;
+		CameraPositionUpdate();
 
-		float camPosition_x = (player.b2Body.getPosition().x - camera.position.x) * 0.1f;
-		float camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f);
-		camera.position.x += (float) Math.round(camPosition_x * 99f) / 99f;
-		camera.position.y += ((float) Math.round(camPosition_y * 99f) / 99f);
+		player.update(dt);
 
 		hud.update(dt);
-
 		camera.update();
 		mapRenderer.setView(camera);
 
 	}
 
+	float camPosition_x;
+	float camPosition_y;
+
+	public void CameraPositionUpdate() {
+		// camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f)
+		// / 100f;
+
+		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+			camPosition_x = (player.b2Body.getPosition().x - 0.47f - camera.position.x) * 0.05f;
+			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
+		} else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+			camPosition_x = (player.b2Body.getPosition().x + 0.47f - camera.position.x) * 0.05f;
+			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
+		} else {
+			camPosition_x = (player.b2Body.getPosition().x - camera.position.x) * 0.1f;
+			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
+		}
+		// camera.position.x += (float) Math.round(camPosition_x * 99f) / 99f;
+		// camera.position.y += ((float) Math.round(camPosition_y * 99f) / 99f);
+		camera.position.x += camPosition_x;
+		camera.position.y += camPosition_y;
+
+	}
+
 	@Override
 	public void render(float delta) {
+
 		update(delta);
 
-		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		mapRenderer.render();
@@ -129,17 +158,53 @@ public class PlayableStage implements Screen {
 		game.batch.setProjectionMatrix(hud.actorStage.getCamera().combined);
 		hud.actorStage.draw();
 
-		if (portalabled) {
-			if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-				game.setScreen(new PlayableStage(game, mapTo, teleportTo, playerFacingRight));
-				dispose();
+		stage.act();
+		stage.draw();
+
+		if (portalabled && !mapSwitching) {
+			if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+				mapSwitch();
+				stage.addAction(Actions.sequence(Actions.alpha(0), Actions.fadeIn(0.5f), Actions.delay(0.05f),
+						Actions.run(new Runnable() {
+							@Override
+							public void run() {
+								game.setScreen(new PlayableStage(game, mapTo, teleportTo, playerFacingRight));
+								dispose();
+								mapSwitch();
+							}
+						})));
 			}
 		}
 	}
 
 	@Override
 	public void show() {
+		/*
+		 * Image image = new Image(new TextureRegion()); image.setSize(WIDTH, HEIGHT);
+		 * image.setOrigin(cameraViewPort.getWorldWidth(),
+		 * cameraViewPort.getWorldHeight()); image.setColor(Color.BLACK);
+		 */
+		stage = new Stage();
+		image = new Image(game.BLACK_TILE);
+		image.setBounds(0, 0, 2148, 2148);
 
+		stage.addActor(image);
+		mapSwitch();
+		stage.addAction(Actions.sequence(Actions.alpha(1), Actions.fadeOut(0.5f), Actions.delay(0.05f),
+				Actions.run(new Runnable() {
+					@Override
+					public void run() {
+						mapSwitch();
+					}
+				})));
+
+		// stage.getRoot().setColor(1, 1, 1, 0);
+		// stage.getRoot().addAction(Actions.sequence(Actions.alpha(0),
+		// Actions.fadeOut(1.0f), Actions.delay(1)));
+	}
+
+	public void mapSwitch() {
+		mapSwitching = (mapSwitching) ? false : true;
 	}
 
 	@Override
@@ -163,6 +228,7 @@ public class PlayableStage implements Screen {
 
 	@Override
 	public void dispose() {
+		stage.dispose();
 		hud.dispose();
 		tileMap.dispose();
 		world.dispose();

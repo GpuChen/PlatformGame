@@ -16,6 +16,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.kotcrab.vis.ui.widget.ListView.UpdatePolicy;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -30,10 +31,10 @@ public class Player extends Sprite {
 	public enum State {
 		IDEL, RUNNING, JUMPING
 	}
-
+	private PlayableStage stage;
 	public State currState;
 	public State prevState;
-
+	
 	public World world;
 	public Body b2Body;
 	public float width = 30;
@@ -55,13 +56,13 @@ public class Player extends Sprite {
 
 	public float movementSpeed;
 	public float animationSpeed;
-
+	
 	public Player(PlayableStage stage, Vector2 position, boolean facingRight) {
 
 		// Animation Setting and Default
 		// super(stage.playerAtlas.findRegion("idel"));
 		playerAtlas = new TextureAtlas("img/player/Player.atlas");
-
+		this.stage = stage;
 		currState = State.IDEL;
 		prevState = State.IDEL;
 		stateTimer = 0;
@@ -94,13 +95,22 @@ public class Player extends Sprite {
 		
 		setPosition((b2Body.getPosition().x - getWidth() / 2), (b2Body.getPosition().y - getHeight() / 2));
 		setRegion(getFrame(dt * animationSpeed));
-		playerMovement(dt);
+		
+		if(!stage.mapSwitching) {
+			playerMovement(dt);		
+		}
+		if(b2Body.getLinearVelocity().y <= -5f) { 
+			b2Body.setLinearVelocity(b2Body.getLinearVelocity().x, -5f); // to restrict the max gravity on player
+		}
 		// System.out.println(b2Body.getLinearVelocity().x);
 	}
 
 	public void playerMovement(float dt) {
 
-		if (Gdx.input.isKeyJustPressed(Keys.UP)) {
+		if (stage.portalabled) {
+
+		} else if(Gdx.input.isKeyJustPressed(Keys.UP)) {
+			b2Body.setLinearVelocity(b2Body.getLinearVelocity().x, 0); // reset the vel_y, when jump again
 			b2Body.applyLinearImpulse(new Vector2(0, 4f), b2Body.getWorldCenter(), true);
 		}
 

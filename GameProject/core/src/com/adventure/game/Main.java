@@ -4,8 +4,10 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -22,9 +24,14 @@ public class Main extends Game {
 	
 	public boolean paused;
 	public boolean debug;
+
 	
 	TitleScreen titleScreen;
 	PlayableStage playStage;
+	
+	
+	
+	public Texture BLACK_TILE;
 	
 	@Override
 	public void create () {
@@ -35,8 +42,7 @@ public class Main extends Game {
 		debug = true;
 		
 		// Global Part
-				
-		
+		BLACK_TILE = new Texture("img/system/black.png");
 		batch = new SpriteBatch();
 		//img = new Texture("badlogic.jpg");
 		
@@ -73,7 +79,7 @@ public class Main extends Game {
 		batch.dispose();
 	}
 	
-	
+
 }
 
 
