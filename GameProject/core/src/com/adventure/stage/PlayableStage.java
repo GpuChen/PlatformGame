@@ -22,7 +22,11 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import static com.adventure.game.GlobalVariable.PPM;
 import static com.adventure.game.GlobalVariable.WIDTH;
-import static com.adventure.game.GlobalVariable.HEIGHT;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.adventure.game.GlobalVariable.*; // Import all static which by using
 import com.adventure.game.*;
 import com.adventure.object.Player;
 
@@ -43,6 +47,7 @@ public class PlayableStage implements Screen {
 	// ********** GameObject **********
 	public Player player;
 	public HUD hud;
+	public StageActor stageActor;
 	// public Array<Sprite> Objects; // Manager all object render and update method
 
 	// ********** TileMap **********
@@ -95,6 +100,7 @@ public class PlayableStage implements Screen {
 
 		mapName = map.substring(map.lastIndexOf("/") + 1, map.lastIndexOf("."));
 
+		stageActor = new StageActor();
 		hud = new HUD(game.batch, this);
 		camera.position.set(playerPosition.x / PPM, playerPosition.y / PPM, 0);
 	}
@@ -120,13 +126,17 @@ public class PlayableStage implements Screen {
 		// camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f)
 		// / 100f;
 
-		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+		if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && !mapSwitching) {
 			camPosition_x = (player.b2Body.getPosition().x - 0.47f - camera.position.x) * 0.05f;
 			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
-		} else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+		} else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !mapSwitching) {
 			camPosition_x = (player.b2Body.getPosition().x + 0.47f - camera.position.x) * 0.05f;
 			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
-		} else {
+		}else if (Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)){
+			Gdx.app.log("Stage event", "dlbs");
+			stageActor.dialogBlackScreen();
+			// TODO: this is for testing, it will be remove.
+		}else {
 			camPosition_x = (player.b2Body.getPosition().x - camera.position.x) * 0.1f;
 			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
 		}
@@ -156,10 +166,16 @@ public class PlayableStage implements Screen {
 		game.batch.end();
 
 		game.batch.setProjectionMatrix(hud.actorStage.getCamera().combined);
-		hud.actorStage.draw();
 
 		stage.act();
 		stage.draw();
+		stageActor.update(delta);
+		
+		/*
+		 * for (Stage stage : stages) { stage.act(); stage.draw(); }
+		 */
+
+		hud.actorStage.draw();
 
 		if (portalabled && !mapSwitching) {
 			if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
@@ -175,19 +191,19 @@ public class PlayableStage implements Screen {
 						})));
 			}
 		}
+
 	}
 
 	@Override
 	public void show() {
-		/*
-		 * Image image = new Image(new TextureRegion()); image.setSize(WIDTH, HEIGHT);
-		 * image.setOrigin(cameraViewPort.getWorldWidth(),
-		 * cameraViewPort.getWorldHeight()); image.setColor(Color.BLACK);
-		 */
-		stage = new Stage();
-		image = new Image(game.BLACK_TILE);
-		image.setBounds(0, 0, 2148, 2148);
 
+		// stageActor.dialogBlackScreen();
+
+		// MapChange Stage
+		stage = new Stage();
+		image = new Image((Texture) ASSETMANAGER.get(WHITESQUARE));
+		image.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		image.setColor(Color.BLACK);
 		stage.addActor(image);
 		mapSwitch();
 		stage.addAction(Actions.sequence(Actions.alpha(1), Actions.fadeOut(0.5f), Actions.delay(0.05f),
@@ -210,6 +226,7 @@ public class PlayableStage implements Screen {
 	@Override
 	public void resize(int width, int height) {
 		cameraViewPort.update(width, height);
+
 	}
 
 	@Override
@@ -229,11 +246,16 @@ public class PlayableStage implements Screen {
 	@Override
 	public void dispose() {
 		stage.dispose();
+		stageActor.dispose();
+		/*
+		 * if (!stages.isEmpty()) { for (Stage stage : stages) { stage.dispose(); } }
+		 */
 		hud.dispose();
 		tileMap.dispose();
 		world.dispose();
 		mapRenderer.dispose();
 		b2dr.dispose();
+
 	}
 
 	public World getWorld() {
