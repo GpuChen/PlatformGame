@@ -24,7 +24,7 @@ import javax.swing.text.Position;
 public class Player extends Sprite {
 
 	public enum State {
-		IDEL, RUNNING, JUMPING
+		IDEL, RUNNING, JUMPING, FALLING
 	}
 	private PlayableStage stage;
 	public State currState;
@@ -43,12 +43,14 @@ public class Player extends Sprite {
 	public TextureAtlas playerAtlas;
 
 	private float stateTimer;
-	private boolean runningRight;
+	private boolean faceingRight;
 	private TextureRegion idel;
 	private Animation<TextureRegion> runBegin;
 	private Animation<TextureRegion> runing;
 	private Animation<TextureRegion> runStop;
-
+	private Animation<TextureRegion> jumppingUp;
+	private Animation<TextureRegion> falling;
+	
 	public float movementSpeed;
 	public float animationSpeed;
 	
@@ -61,7 +63,7 @@ public class Player extends Sprite {
 		currState = State.IDEL;
 		prevState = State.IDEL;
 		stateTimer = 0;
-		runningRight = facingRight;
+		this.faceingRight = facingRight;
 		animationSpeed = 1f;
 		movementSpeed = 1.4f;
 
@@ -124,6 +126,7 @@ public class Player extends Sprite {
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
 			Gdx.app.exit();
 		}
+		
 	}
 
 	public TextureRegion getFrame(float dt) {
@@ -144,12 +147,12 @@ public class Player extends Sprite {
 			break;
 		}
 
-		if ((b2Body.getLinearVelocity().x < 0 || !runningRight) && !region.isFlipX()) {
+		if ((b2Body.getLinearVelocity().x < 0 || !faceingRight) && !region.isFlipX()) {
 			region.flip(true, false);
-			runningRight = false;
-		} else if ((b2Body.getLinearVelocity().x > 0 || runningRight) && region.isFlipX()) {
+			faceingRight = false;
+		} else if ((b2Body.getLinearVelocity().x > 0 || faceingRight) && region.isFlipX()) {
 			region.flip(true, false);
-			runningRight = true;
+			faceingRight = true;
 		}
 
 		stateTimer = (currState == prevState) ? stateTimer + dt : 0;
@@ -175,12 +178,20 @@ public class Player extends Sprite {
 
 		// feet box part
 		// TODO: seek for with userData by string still can force on this object
-		shape.setAsBox(feetBox_width / PPM, feetBox_height / PPM, new Vector2(0, -24 / PPM), 0);
+		shape.setAsBox(feetBox_width / PPM, feetBox_height / PPM, new Vector2(0, -22 / PPM), 0);
+		fdef.shape = shape;
+		fdef.filter.categoryBits = GlobalVariable.FOOT_BIT;
+		fdef.filter.maskBits = GlobalVariable.GROUND_BIT | GlobalVariable.OBJECT_BIT | GlobalVariable.PLATFORM_BIT;
+		//fdef.isSensor = true;
+		b2Body.createFixture(fdef).setUserData(this);
+		
+		// Hit Box
+		shape.setAsBox((hitbox_width- 1) / PPM, (hitbox_height - 1) / PPM);
 		fdef.shape = shape;
 		fdef.filter.categoryBits = GlobalVariable.PLAYER_BIT;
-		fdef.filter.maskBits = GlobalVariable.GROUND_BIT | GlobalVariable.OBJECT_BIT | GlobalVariable.PORTAL_BIT;
+		fdef.filter.maskBits = GlobalVariable.PORTAL_BIT;
 		fdef.isSensor = true;
-		b2Body.createFixture(fdef).setUserData("playerFoot");
+		b2Body.createFixture(fdef).setUserData(this);
 
 	}
 
@@ -193,12 +204,16 @@ public class Player extends Sprite {
 	}
 
 	public void facingRight() {
-		runningRight = (runningRight) ? false : true;
+		faceingRight = (faceingRight) ? false : true;
 	}
 
 	public State getState() {
 
-		if (b2Body.getLinearVelocity().x != 0)
+		if(b2Body.getLinearVelocity().y > 0)
+			return State.JUMPING;
+		else if (b2Body.getLinearVelocity().y < 0)
+			return State.FALLING;
+		else if (b2Body.getLinearVelocity().x != 0)
 			return State.RUNNING;
 		else
 			return State.IDEL;

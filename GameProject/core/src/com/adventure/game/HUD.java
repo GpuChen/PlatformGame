@@ -30,11 +30,13 @@ public class HUD implements Disposable {
 	private float playerHealPoint;
 	private Vector2 playerVelocity;
 	private Vector2 playerPosition;
+	private String playerState;
 	private String mapName;
 
 	private Label playerVelocityLabel;
 	private Label playerPositionLabel;
-
+	private Label playerStateLabel;
+	
 	private Label var_MovementLabel;
 	private Label var_AnimatSpeedLabel;
 	
@@ -49,7 +51,8 @@ public class HUD implements Disposable {
 
 		try {
 			playerVelocity = player.getVelocity();
-			playerPosition = player.getPosition();
+			playerPosition = player.getPosition(); 
+			playerState = player.getState().toString();
 		} catch (Error err) {
 
 		}
@@ -81,6 +84,12 @@ public class HUD implements Disposable {
 			var_AnimatSpeedLabel = new Label(String.format("AnimatedSpeed: %.3f", player.animationSpeed),
 					new Label.LabelStyle(new BitmapFont(), Color.WHITE));
 			var_AnimatSpeedLabel.setFontScale(0.5f);
+			playerStateLabel = new Label(String.format("State: %s", playerState),
+					new Label.LabelStyle(new BitmapFont(), Color.WHITE));
+			playerStateLabel.setFontScale(0.5f);
+			
+			playerVarTable.add(playerStateLabel);
+			playerVarTable.row();
 			playerVarTable.add(var_MovementLabel);
 			playerVarTable.row();
 			playerVarTable.add(var_AnimatSpeedLabel);
@@ -97,7 +106,9 @@ public class HUD implements Disposable {
 		playerVelocityLabel.setText(String.format("VelX: %.3f, VelY: %.3f", playerVelocity.x, playerVelocity.y));
 		playerPosition = player.getPosition();
 		playerPositionLabel.setText(String.format("PosX: %.3f, PosY: %.3f", playerPosition.x, playerPosition.y));
-
+		
+		playerState = player.getState().toString();
+		playerStateLabel.setText(String.format("State: %s", playerState));
 		var_MovementLabel.setText(String.format("MovSped: %.2f", player.movementSpeed));
 		var_AnimatSpeedLabel.setText(String.format("AniSped: %.2f", player.animationSpeed));
 		

@@ -25,6 +25,7 @@ import static com.adventure.game.GlobalVariable.WIDTH;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static com.adventure.game.GlobalVariable.*; // Import all static which by using
 import com.adventure.game.*;
@@ -40,6 +41,13 @@ public class PlayableStage implements Screen {
 	public OrthographicCamera camera;
 	public Viewport cameraViewPort;
 	public boolean mapSwitching;
+	
+	private Random random1;
+
+	private float skEffElapsed;
+	private float skEffintensity;
+	private float skEffDuration;
+	
 	// ********** Texture **********
 	public Stage stage;
 	private Image image;
@@ -86,11 +94,13 @@ public class PlayableStage implements Screen {
 		// cameraViewPort.getWorldHeight() / 2, 0);
 
 		// GameObject Initialized
+		random1 = new Random();
 		mapSwitching = false;
 		new WorldRender(this, map);
 
 		try {
 			player = new Player(this, playerPosition, playerFacingRight);
+			Player player2 = new Player(this, new Vector2(550,250), true);
 		} catch (Error err) {
 
 		}
@@ -109,7 +119,7 @@ public class PlayableStage implements Screen {
 		// System.out.println(portalabled + ", " + teleportTo + ", " + mapTo);
 
 		world.step(1 / 60f, 4, 2);
-		CameraPositionUpdate();
+		CameraPositionUpdate(dt);
 
 		player.update(dt);
 
@@ -121,11 +131,24 @@ public class PlayableStage implements Screen {
 
 	float camPosition_x;
 	float camPosition_y;
-
-	public void CameraPositionUpdate() {
-		// camera.position.x = (float) Math.round(player.b2Body.getPosition().x * 100f)
-		// / 100f;
-
+	
+	public void cameraShakeEff(float duration, float intensity) {
+		skEffElapsed = 0;
+		skEffDuration = duration;
+		skEffintensity = intensity;
+	}
+	
+	public void CameraPositionUpdate(float dt) {
+		
+		// Camera Shake Effect
+		if(skEffElapsed < skEffDuration) {
+			float currentPower = skEffintensity * camera.zoom * ((skEffDuration - skEffElapsed) / skEffDuration);
+			float x = (random1.nextFloat() - 0.5f) * currentPower;
+			float y = (random1.nextFloat() - 0.5f) * currentPower;
+			camera.translate(-x, -y);
+			skEffElapsed += dt;
+		}
+		
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && !mapSwitching) {
 			camPosition_x = (player.b2Body.getPosition().x - 0.47f - camera.position.x) * 0.05f;
 			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
@@ -136,12 +159,15 @@ public class PlayableStage implements Screen {
 			Gdx.app.log("Stage event", "dlbs");
 			stageActor.dialogBlackScreen();
 			// TODO: this is for testing, it will be remove.
+		}else if (Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_2)){
+			Gdx.app.log("Camera event", "skEff");
+			cameraShakeEff(512f, 0.15f);
+			// TODO: this is for testing, it will be remove.
 		}else {
 			camPosition_x = (player.b2Body.getPosition().x - camera.position.x) * 0.1f;
 			camPosition_y = (player.b2Body.getPosition().y - camera.position.y + 0.2f) * 0.2f;
-		}
-		// camera.position.x += (float) Math.round(camPosition_x * 99f) / 99f;
-		// camera.position.y += ((float) Math.round(camPosition_y * 99f) / 99f);
+		}		
+		
 		camera.position.x += camPosition_x;
 		camera.position.y += camPosition_y;
 
@@ -219,6 +245,7 @@ public class PlayableStage implements Screen {
 		// Actions.fadeOut(1.0f), Actions.delay(1)));
 	}
 
+	
 	public void mapSwitch() {
 		mapSwitching = (mapSwitching) ? false : true;
 	}

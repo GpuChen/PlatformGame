@@ -23,6 +23,7 @@ public class WorldContactListener implements ContactListener {
 //		System.out.println(cDef);
 
 		switch (cDef) {
+		// When player step into portal, and enable the function
 		case GlobalVariable.PLAYER_BIT | GlobalVariable.PORTAL_BIT:
 			if (fixA.getFilterData().categoryBits == GlobalVariable.PORTAL_BIT) {
 				((Portal) fixA.getUserData()).TpEnabled();
@@ -39,8 +40,9 @@ public class WorldContactListener implements ContactListener {
 		Fixture fixA = contact.getFixtureA();
 		Fixture fixB = contact.getFixtureB();
 		int cDef = fixA.getFilterData().categoryBits | fixB.getFilterData().categoryBits;
-		
+
 		switch (cDef) {
+		// When player off the portal, and disable the function
 		case GlobalVariable.PLAYER_BIT | GlobalVariable.PORTAL_BIT:
 			if (fixA.getFilterData().categoryBits == GlobalVariable.PORTAL_BIT) {
 				((Portal) fixA.getUserData()).TpDisabled();
@@ -48,11 +50,38 @@ public class WorldContactListener implements ContactListener {
 				((Portal) fixB.getUserData()).TpDisabled();
 			}
 			break;
+
 		}
 	}
 
 	@Override
 	public void preSolve(Contact contact, Manifold oldManifold) {
+		Fixture fixA = contact.getFixtureA();
+		Fixture fixB = contact.getFixtureB();
+		int cDef = fixA.getFilterData().categoryBits | fixB.getFilterData().categoryBits;
+
+		switch (cDef) {
+		// Player through the platform
+		case GlobalVariable.FOOT_BIT | GlobalVariable.PLATFORM_BIT:
+			if (fixA.getFilterData().categoryBits == GlobalVariable.FOOT_BIT) {
+				if (((Player) fixA.getUserData()).currState.toString() == "JUMPING"
+						|| ((Player) fixA.getUserData()).currState.toString() != "FALLING"
+								&& ((Player) fixA.getUserData()).b2Body.getLinearVelocity().y > 0) {
+					contact.setEnabled(false);
+				}
+			}
+			if (fixB.getFilterData().categoryBits == GlobalVariable.FOOT_BIT) {
+				if (((Player) fixB.getUserData()).currState.toString() == "JUMPING"
+						|| ((Player) fixB.getUserData()).currState.toString() != "FALLING"
+								&& ((Player) fixB.getUserData()).b2Body.getLinearVelocity().y > 0) {
+					contact.setEnabled(false);
+				}
+			}
+			break;
+			
+		default:
+			break;
+		}
 
 	}
 

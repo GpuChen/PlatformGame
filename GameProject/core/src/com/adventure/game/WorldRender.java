@@ -50,8 +50,8 @@ public class WorldRender {
 		shape = new PolygonShape();
 		fdef = new FixtureDef();
 
-		DrawRectStaticBodyObject(getLayerByGroup("ObjectLayer", "Wall"), GlobalVariable.OBJECT_BIT);
-		DrawRectStaticBodyObject(getLayerByGroup("ObjectLayer", "Platform"), GlobalVariable.GROUND_BIT);
+		DrawRectStaticBodyObject(getLayerByGroup("ObjectLayer", "Ground"), GlobalVariable.GROUND_BIT);
+		DrawRectStaticBodyObject(getLayerByGroup("ObjectLayer", "Platform"), GlobalVariable.PLATFORM_BIT);
 
 		try {
 			for (MapObject obj : getLayerByGroup("ObjectLayer", "Portal").getObjects()
